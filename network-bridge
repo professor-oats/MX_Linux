@@ -1,0 +1,53 @@
+#!/bin/sh -e
+
+### BEGIN INIT INFO
+# Provides: network-bridge
+# Required-Start: $network
+# Required-Stop: $network
+# Default-Start: 2 3 4 5
+# Default-Stop: 0 1 6
+# Short-Description: Set up network bridge
+### END INIT INFO
+
+BRIDGE=br0
+INTERFACE=eth0
+
+start() {
+  echo "Stopping existing DHCP client"
+  dhclient -r "$INTERFACE" || true
+  echo "Starting network bridge..."
+  brctl addbr $BRIDGE
+  brctl addif $BRIDGE $INTERFACE
+  ip link set $BRIDGE up
+  ip addr flush dev $INTERFACE
+  dhclient $BRIDGE
+}
+
+stop() {
+  echo "Stopping network bridge..."
+  ip link set $BRIDGE down
+  btctrl delbr $BRIDGE
+}
+
+case "$1" in
+  start)
+    start
+    ;;
+
+  stop)
+    stop
+    ;;
+  restart)
+    stop
+    start
+    ;;
+  *)
+    echo "Usage: $0 {start|stop|restart}"
+    exit 1
+    ;;
+esac
+
+exit 0
+
+
+
