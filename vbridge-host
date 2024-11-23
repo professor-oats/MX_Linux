@@ -1,0 +1,53 @@
+#!/bin/sh -e
+
+### BEGIN INIT INFO
+# Provides: vbridge-host
+# Required-Start: $network vinterface-host
+# Required-Stop: $network
+# Default-Start: 2 3 4 5
+# Default-Stop: 0 1 6
+# Short-Description: Set up network bridge between host and virtual router
+### END INIT INFO
+
+BRIDGE=vbr0host
+INTERFACE=vface0host
+
+start() {
+  echo "Stopping existing DHCP client"
+  dhclient -r "$INTERFACE" || true
+  if ! brctl show | grep -q "vbr0host"; then
+    echo "Creating network bridge $BRIDGE"
+    brctl addbr $BRIDGE
+    brctl addif $BRIDGE $INTERFACE
+  fi
+  echo "Starting network bridge..."
+  ip link set $BRIDGE up
+  ip addr flush dev $INTERFACE
+  dhclient $BRIDGE
+}
+
+stop() {
+  echo "Stopping network bridge..."
+  ip link set $BRIDGE down
+}
+
+case "$1" in
+  start)
+    start
+    ;;
+
+  stop)
+    stop
+    ;;
+  restart)
+    stop
+    start
+    ;;
+  *)
+    echo "Usage: $0 {start|stop|restart}"
+    exit 1
+    ;;
+esac
+
+exit 0
+
