@@ -15,7 +15,7 @@ INTERFACE=vface0host
 start() {
   echo "Stopping existing DHCP client"
   dhclient -r "$INTERFACE" || true
-  if ! brctl show | grep -q "vbr0host"; then
+  if ! brctl show | grep -q "$BRIDGE"; then
     echo "Creating network bridge $BRIDGE"
     brctl addbr $BRIDGE
     brctl addif $BRIDGE $INTERFACE
@@ -23,12 +23,15 @@ start() {
   echo "Starting network bridge..."
   ip link set $BRIDGE up
   ip addr flush dev $INTERFACE
-  dhclient $BRIDGE
+  ip addr flush dev $BRIDGE
+  ip addr add 10.0.0.2/30 dev $BRIDGE
+  ip route add default via 10.0.0.1 dev $BRIDGE
 }
 
 stop() {
   echo "Stopping network bridge..."
   ip link set $BRIDGE down
+  brctl delbr $BRIDGE
 }
 
 case "$1" in
