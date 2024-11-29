@@ -1,16 +1,16 @@
 #!/bin/sh -e
 
 ### BEGIN INIT INFO
-# Provides: vbridge-host
-# Required-Start: $network vinterface-host
+# Provides: vbridge-public
+# Required-Start: $network vinterface-public
 # Required-Stop: $network
 # Default-Start: 2 3 4 5
 # Default-Stop: 0 1 6
 # Short-Description: Set up network bridge between host and virtual router
 ### END INIT INFO
 
-BRIDGE=vbr0host
-INTERFACE=vface0host
+BRIDGE=vbr0public
+INTERFACE=vface0public
 
 start() {
   echo "Stopping existing DHCP client"
@@ -24,11 +24,11 @@ start() {
   ip link set $BRIDGE up
   ip addr flush dev $INTERFACE
   ip addr flush dev $BRIDGE
-  ip addr add 10.0.0.2/29 dev $BRIDGE
-  ip route add default via 10.0.0.1 dev $BRIDGE
-  #ip route add default via 10.0.0.1 dev $BRIDGE table $BRIDGE
-  # this can also become necessary
-  # ip neigh add 10.0.0.1 lladdr ro:mc:ad:he:re dev $BRIDGE
+  ip addr add 10.0.0.10/29 dev $BRIDGE
+
+  ## Need to add this route and rule to ensure the subnet uses the correct gateway on router-vm
+  ip route add default via 10.0.0.9 dev $BRIDGE table $BRIDGE  # Table here is named same as bridge
+  ip rule add from 10.0.0.8/29 lookup $BRIDGE
 }
 
 stop() {
