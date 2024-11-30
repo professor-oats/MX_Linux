@@ -9,6 +9,8 @@
 # Short-Description: Set up network bridge
 ### END INIT INFO
 
+## This is simply a template
+
 BRIDGE=br0
 INTERFACE=eth0
 
