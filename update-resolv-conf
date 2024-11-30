@@ -1,0 +1,22 @@
+#!/bin/bash
+
+RESOLV_CONF="/etc/resolv.conf"
+
+case $script_type in
+  up)
+    echo "Setting DNS from VPN"
+    echo "# Added by OpenVPN" > $RESOLV_CONF
+    
+    for option in ${!foreign_option_*}; do
+      if [[ ${!option} == "dhcp-option DNS"* ]]; then
+        dns_server=$(echo ${!option} | cut -d " " -f 3)
+        echo "nameserver $dns_server" >> $RESOLV_CONF
+      fi
+    done
+    ;;
+
+  down)
+    echo "Reverting DNS Settings"
+    cp -f /etc/resolv.conf.bk $RESOLV_CONF
+    ;;
+esac
